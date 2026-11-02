@@ -1,0 +1,238 @@
+<title>BG2131 Flashcards</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one-column phone deck. Header + topic chips on top, a tall flip card in the middle, thumb-reach buttons at the bottom. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --fg:#14202e; --muted:#5b6b7d; --line:#d5dce5;
+  --t7:#1f5fd1; --t7-soft:#dce8fb; --t8:#c2410c; --t8-soft:#fde5d8;
+  --good:#16794a; --bad:#b4281f;
+  --display:'Bricolage Grotesque',system-ui,sans-serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e141c; --surface:#18212d; --fg:#e8edf3; --muted:#92a1b3; --line:#2a3544;
+  --t7:#6ea1ff; --t7-soft:#1b2c4a; --t8:#ff9a62; --t8-soft:#3a2418;
+  --good:#4fd195; --bad:#ff7d73; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e141c; --surface:#18212d; --fg:#e8edf3; --muted:#92a1b3; --line:#2a3544;
+  --t7:#6ea1ff; --t7-soft:#1b2c4a; --t8:#ff9a62; --t8-soft:#3a2418;
+  --good:#4fd195; --bad:#ff7d73; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px;-webkit-tap-highlight-color:transparent}
+.app{max-width:520px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:12px;min-height:0}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font:700 22px/1.1 var(--display);margin:0;letter-spacing:-.01em}
+.sub{font:500 12px var(--mono);color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:7px 13px;font:500 13px var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{color:#fff;border-color:transparent;background:var(--fg)}
+.chip[data-f="t7"][aria-pressed="true"]{background:var(--t7)}
+.chip[data-f="t8"][aria-pressed="true"]{background:var(--t8)}
+:root[data-theme="dark"] .chip[aria-pressed="true"],
+.chip[aria-pressed="true"]{color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0e141c}}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#0e141c}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .g{background:var(--good)} .bar .m{background:var(--bad)}
+.meta{display:flex;justify-content:space-between;font:500 12px var(--mono);color:var(--muted)}
+.stage{flex:1;min-height:0;perspective:1200px;position:relative}
+.card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.2,1);cursor:pointer;border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.face.back{transform:rotateY(180deg)}
+.tag{align-self:flex-start;font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:5px}
+.tag.t7{background:var(--t7-soft);color:var(--t7)} .tag.t8{background:var(--t8-soft);color:var(--t8)}
+.q{font:600 21px/1.28 var(--display);text-wrap:balance;margin:auto 0}
+.a{font-size:17px;line-height:1.5;margin:auto 0;white-space:pre-line}
+.hint{font:500 11px var(--mono);color:var(--muted);text-align:center}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:2px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:15px 10px;font:600 15px var(--body);cursor:pointer}
+.btn.miss{color:var(--bad)} .btn.got{color:var(--good)}
+.btn:disabled{opacity:.4}
+.tools{display:flex;justify-content:space-between;gap:8px}
+.link{background:none;border:0;color:var(--muted);font:500 13px var(--body);padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.done{margin:auto;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done h2{font:700 24px var(--display);margin:0}
+button:focus-visible{outline:2px solid var(--t7);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+
+<div class="app">
+  <header><h1>BG2131 Flashcards</h1><span class="sub" id="count"></span></header>
+  <div class="chips" id="chips">
+    <button class="chip" data-f="all" aria-pressed="true">All</button>
+    <button class="chip" data-f="t7" aria-pressed="false">T7 Proteins</button>
+    <button class="chip" data-f="t8" aria-pressed="false">T8 Cells</button>
+    <button class="chip" data-f="miss" aria-pressed="false">Missed</button>
+  </div>
+  <div class="bar" aria-hidden="true"><i class="g" id="barG"></i><i class="m" id="barM"></i></div>
+  <div class="meta"><span id="pos"></span><span id="score"></span></div>
+  <div class="stage" id="stage"></div>
+  <div class="actions">
+    <button class="btn miss" id="bMiss">Missed it</button>
+    <button class="btn got" id="bGot">Got it</button>
+  </div>
+  <div class="tools">
+    <button class="link" id="prev">Back</button>
+    <button class="link" id="shuf">Shuffle</button>
+    <button class="link" id="reset">Reset progress</button>
+  </div>
+</div>
+
+<script>
+const C=[
+// ---- Topic 7: Protein interactions with biomaterials (Week 8)
+["t7","Structure","What are amino acids at physiological pH, and what are their parts?","Zwitterions. Each has an α-carbon bonded to an amine group (+), a carboxylic acid group (−) and an R group (side chain)."],
+["t7","Structure","Group the amino acids by side chain type.","Charged hydrophilic: positive Arg, His, Lys; negative Asp, Glu.\nPolar uncharged: Ser, Thr, Asn, Gln.\nHydrophobic: Ala, Val, Ile, Leu, Met, Phe, Tyr, Trp.\nSpecial: Cys, Sec, Gly, Pro."],
+["t7","Structure","Why is cysteine special?","Its –SH groups form disulfide bonds (R1–S–S–R2), causing intermolecular cross-linking in proteins. (Hair perming: reducing agent breaks S–S, oxidising agent re-forms them to set the curl.)"],
+["t7","Structure","Why is proline special?","Its pyrrolidine ring has fewer degrees of rotational freedom, which limits protein folding in 3D."],
+["t7","Structure","What links amino acids in the primary structure?","Peptide (amide) bonds, giving a linear polypeptide."],
+["t7","Structure","Define the isoelectric point (pI) and the protein charge either side of it.","pH at which a molecule or surface carries no net charge. pH < pI: protein positive. pH > pI: protein negative."],
+["t7","Structure","α-helix: what holds it together?","Hydrogen bonds between backbone groups (amide groups, electronegative atom to proton) within a single chain fragment."],
+["t7","Structure","β-pleated sheet: what holds it together?","Hydrogen bonds between backbone amide groups of two different peptide fragments (inter-fragment)."],
+["t7","Structure","Tertiary vs quaternary structure?","Tertiary: folding of one polypeptide chain into a functional protein; R-group interactions within the chain.\nQuaternary: 3D arrangement of several tertiary subunits (monomer, dimer…); R-group interactions between chains. Example: haemoglobin, a heterotetramer."],
+["t7","Structure","What happens when a protein is denatured?","Loses quaternary, tertiary and secondary structure; the primary structure remains."],
+["t7","Adsorption factors","Name the 3 factors that dictate protein adsorption.","1. Dehydration of surface and protein (hydrophobicity)\n2. Distribution of charged groups (charge)\n3. Structural rearrangement of the protein"],
+["t7","Adsorption factors","List surface properties that affect protein adsorption.","Hydrophobicity, surface charge, steric hindrance, surface roughness."],
+["t7","Adsorption factors","Define the hydrophobic interaction.","Tendency of non-polar substances to aggregate in aqueous solution and exclude water. It drives protein folding, lipid bilayer and micelle formation, and membrane protein insertion."],
+["t7","Adsorption factors","Write the Gibbs free energy equation and the condition for a spontaneous process.","ΔG = ΔH − TΔS. Spontaneous when ΔG < 0 (e.g. ΔH < 0 and ΔS > 0)."],
+["t7","Adsorption factors","Explain the hydrophobic interaction in terms of entropy (4 steps).","1. A hydrophobic solute breaks water–water H-bonds to make a cavity.\n2. It becomes caged in an ice-like shell of highly ordered water.\n3. Hydrophobic molecules come together, reducing exposed area, dehydrating and freeing ordered water.\n4. Entropy of the system rises (ΔS > 0), so ΔG falls."],
+["t7","Adsorption factors","How does charge decide which part of a protein binds a surface?","Positively charged biomaterial: the protein's negative regions interact with it. Negatively charged biomaterial: the protein's positive regions interact."],
+["t7","Adsorption factors","Same-charge vs opposite-charge protein and surface?","Same charge: repulsive, less adsorption. Opposite charge: attractive, more adsorption."],
+["t7","Adsorption factors","Hard vs soft proteins in adsorption?","Hard: more intramolecular cross-linking, stable, resists structural change. Soft: less cross-linking, less stable, unfolds more, makes more surface contact points and adsorbs more."],
+["t7","Adsorption factors","How does protein size affect adsorption?","Larger molecules have more sites for surface contact."],
+["t7","Adsorption factors","How does unfolding rate affect adsorption?","Molecules that unfold rapidly form surface contacts more readily."],
+["t7","Adsorption factors","Which proteins adsorb more readily on hydrophobic surfaces?","More hydrophobic proteins."],
+["t7","Reversibility","Physisorption vs chemisorption?","Physisorption: physical adsorption, weak interactions, reversible. Chemisorption: covalent bond formation, strong interactions."],
+["t7","Reversibility","Why does protein adsorption go from reversible to irreversible over time?","Residence time increases and conformational changes occur, so weak reversible binding (physisorption) moves toward permanent binding (chemisorption)."],
+["t7","Langmuir","What kind of adsorption does the Langmuir model describe, and how is it set up?","Reversible adsorption, analogous to reaction kinetics: P + S → PS (first order). [P] = protein in solution, [S] = unoccupied surface sites, [PS] = occupied sites."],
+["t7","Langmuir","Give the adsorption and desorption rates in the Langmuir model.","Adsorption r1 = ka[P][S]. Desorption r2 = kd[PS]."],
+["t7","Langmuir","Define the affinity constant K.","At equilibrium r1 = r2, so K = ka/kd = [PS]/([P][S])."],
+["t7","Langmuir","Derive the fraction of occupied sites v.","v = [PS]/([PS]+[S]) = K[P]/(1 + K[P]) = 1/(1 + 1/(K[P]))."],
+["t7","Langmuir","What does a higher K or [P] do in Langmuir?","More protein adsorbed. The curve of v against [P] rises then plateaus as the surface saturates."],
+["t7","Langmuir","Hypothesis for what happens after adsorption plateaus?","Proteins rearrange on the surface (spread out), which increases surface concentration/frees sites, so adsorption can continue beyond the simple plateau."],
+["t7","Vroman","What is the Vroman effect (transient competitive adsorption)?","In a multicomponent protein solution, smaller and/or more concentrated proteins adsorb first. Larger proteins with higher surface affinity arrive later and gradually displace them."],
+["t7","Vroman","Which blood proteins are listed, and in what order do they adsorb?","Albumin, IgG, fibrinogen, fibronectin, high-MW kininogen. Albumin adsorbs first (Protein A); high-MW kininogen is the last/highest affinity (Protein C)."],
+["t7","Vroman","In an adsorption-vs-time plot with three proteins, how do you tell size?","The protein that peaks first and is replaced is the smallest (A < B < C). Later peaks mean larger, higher-affinity proteins."],
+["t7","Assays","List the 4 types of protein assays in this lecture.","Chromatography (LC), colorimetric assays, ELISA, Western blotting."],
+["t7","Assays","What does liquid chromatography provide?","Separation of substances by chemical properties such as size or charge (ion exchange, gel filtration, affinity, exclusion/gel permeation)."],
+["t7","Assays","Affinity LC: phases and retention time?","Mobile phase: liquid solvent. Stationary phase: small silica/polymer beads (3–10 µm). Retention time depends on analyte chemistry; the weakest affinity with the stationary phase exits first."],
+["t7","Assays","Normal-phase affinity LC?","Mobile phase non-polar (hexane), stationary phase polar (silica). The hydrophobic molecule exits the column first."],
+["t7","Assays","Reverse-phase affinity LC?","Mobile phase polar (water), stationary phase non-polar (C18, octadecane). The hydrophilic molecule exits first."],
+["t7","Assays","Vitamin E isoforms (α, β, γ, δ-tocopherol): which is most hydrophobic and which elutes first in normal vs reverse phase?","α (two –CH3) is most hydrophobic, δ (–H, –H) most hydrophilic. Normal phase: α elutes first. Reverse phase: δ elutes first."],
+["t7","Assays","Basic principle of colorimetric assays?","Colour change due to protein, using a chromophore that absorbs UV-vis light; measured with a UV-vis spectrophotometer. Quantified with Beer–Lambert (A = εlC) against known standards."],
+["t7","Assays","Bradford assay: what does it measure and how?","Total protein concentration. Acidic Coomassie Brilliant Blue G-250 shifts its absorbance maximum from 465 nm to 595 nm when it binds protein."],
+["t7","Assays","Bradford assay limitation?","No specificity: it gives total protein concentration, not which protein. Detection range roughly 1–20 µg/mL up to 100–1500 µg/mL."],
+["t7","Assays","ELISA: the steps.","1 Primary antibody coats plate. 2 Protein added. 3 Wash off unbound. 4 Enzyme-labelled detection (secondary) antibody added. 5 Wash off unbound conjugate. 6 Enzyme substrate and chromogen added. 7 Colour develops and is read."],
+["t7","Assays","ELISA's two components?","One for capture (primary antibody, gives specificity: sandwich assay) and one for signal (enzyme-labelled antibody)."],
+["t7","Assays","What does HRP do in ELISA?","Horseradish peroxidase catalyses oxidation of a substrate with H2O2. TMB goes from colourless to blue, detected by UV-vis."],
+["t7","Assays","What does ELISA tell you?","Detects a specific protein and determines its amount; colour intensity is proportional to the amount. Can also use fluorescent or radio labels."],
+["t7","Assays","What is fluorescence and the Stokes shift?","Emission of light after absorbing light. Absorption (excitation) is higher energy/shorter wavelength; emission is lower energy/longer wavelength. Stokes shift is the difference between the excitation and emission band maxima."],
+["t7","Assays","Western blot: the 3 key stages.","1 SDS-PAGE: SDS unfolds proteins, separates by size.\n2 Transfer to PVDF or nitrocellulose membrane by electric current.\n3 Block, primary antibody, wash, enzyme-conjugated secondary antibody, detect colour/fluorescence/radioactivity."],
+["t7","Assays","Why block the membrane in a Western blot?","To prevent non-specific antibody binding."],
+["t7","Assays","How do you find a protein's size on a Western blot?","Compare the band with a ladder of proteins of known MW run alongside it."],
+["t7","Assays","ELISA vs Western blot?","ELISA: 4–6 h, many samples, only properly folded proteins detected, quantitative, greater sensitivity.\nWestern: 1–2 days, hard for many samples, proteins denatured (cannot tell folding), semi-quantitative, sensitivity depends on amount loaded."],
+// ---- Topic 8: Cell interaction with biomaterials (Week 9)
+["t8","Cell structure","What are the three types of membrane transport proteins?","Channel (ion diffusion), carrier (active transport against a gradient, needs energy), receptor (responds to environment or other cells)."],
+["t8","Cell structure","Name the three cytoskeleton filaments with diameters and roles.","Actin / microfilaments (6–8 nm): contraction, pseudopodia, migration.\nMicrotubules (25 nm): separate DNA in division.\nIntermediate filaments (10 nm): mechanical strength, attach to receptors."],
+["t8","Cell structure","Transcription vs translation?","Transcription: DNA → mRNA in the nucleus (RNA polymerase).\nTranslation: mRNA → protein at the ribosome (tRNA anticodon reads codon)."],
+["t8","Cell structure","DNA vs RNA differences?","RNA is single-stranded, has ribose, and uracil replaces thymine."],
+["t8","Cell structure","Trace a secreted protein from gene to outside the cell.","DNA → mRNA → ribosome on rER (translate, fold) → vesicle → Golgi (pack, sort) → vesicle → exocytosis."],
+["t8","Cell structure","Exocytosis vs endocytosis?","Exocytosis: vesicle fuses with membrane and releases contents out. Endocytosis: membrane engulfs material into the cell."],
+["t8","Cell contacts","Tight junction: proteins and function?","Claudin and occludin sealing strands, linked to actin. Impermeable seal limiting paracellular passage (epithelia, blood–brain barrier)."],
+["t8","Cell contacts","Gap junction: structure and size limit?","Two connexons (connexin proteins) forming a 1.5–2.0 nm channel; passes ions and molecules < 1000 Da. Chemical and electrical coupling."],
+["t8","Cell contacts","Desmosome: receptor, filament, function?","Cadherins (cell–cell), linked to intermediate filaments. Strong attachment that resists shear (heart, bladder, GI mucosa)."],
+["t8","Cell contacts","Hemidesmosome: receptor, filament, function?","Integrins (cell–ECM), linked to intermediate filaments. Anchors epithelial cells to the ECM."],
+["t8","Cell contacts","Focal adhesion: receptor, filament, function?","Integrins (cell–ECM), linked to actin. Anchorage plus signalling to the nucleus; central to cell adhesion on biomaterials."],
+["t8","Cell contacts","Cadherin binding type and requirement?","Homophilic (same with same), Ca²⁺-dependent. Cell–cell adhesion, desmosomes."],
+["t8","Cell contacts","Selectin vs mucin?","Selectin: lectin receptor that binds specific carbohydrates (heterophilic), e.g. leukocytes with endothelium. Mucin: heavily glycosylated ligand for selectins."],
+["t8","Cell contacts","Integrin structure and role?","α/β heterodimer; heterophilic binding to ECM ligands (e.g. fibronectin); mediates cell–ECM adhesion and signalling."],
+["t8","ECM","Collagen: structure and property?","Triple helix of α-chains (Gly-X-Y repeat), fibrils stabilised by Lys–Lys covalent crosslinks. Gives tensile strength."],
+["t8","ECM","Collagen synthesis steps?","1. Hydroxylation of Pro/Lys in ER, triple helix forms\n2. Golgi packaging, secretion\n3. Cleavage of terminal non-helical segments\n4. Crosslinking, fibril assembly\n5. Fibrils → fibers"],
+["t8","ECM","Elastin: composition and property?","~85% hydrophobic residues (Gly, Val, Ala, Pro), random coil, crosslinked. Elastic recoil after large deformation."],
+["t8","ECM","Proteoglycans: why hydrogel-like?","GAG chains (HA, KS, CS/DS, HS) carry sulfate groups, so large negative charge binds water. Space-filling and lubricating."],
+["t8","ECM","Fibronectin is what type of ECM component?","A glycoprotein: protein with oligosaccharide chains. Links cells to the matrix via integrins."],
+["t8","ECM","MMPs vs lysyl oxidase?","MMPs degrade collagen and proteoglycans. Lysyl oxidase crosslinks collagen and elastin."],
+["t8","Cell fate","Necrosis vs apoptosis?","Necrosis: toxic/trauma, cell swells and ruptures, contents leak, inflammation.\nApoptosis: programmed, cell shrinks, forms apoptotic bodies, no inflammation."],
+["t8","Cell fate","Labile, stable, permanent cells?","Labile: divide continuously. Stable: divide once then specialise. Permanent: terminally differentiated, cannot divide."],
+["t8","Cell fate","Order of the cell cycle?","G1 (grow) → R (restriction point) → S (DNA replication) → G2 (prepare) → M (mitosis)."],
+["t8","Cell fate","Describe adhesion → spreading → migration.","Adhesion: attach via non-covalent or ligand–receptor binding. Spreading: pseudopodia extend, integrins bind ligands. Migration: anchor, contract, release rear receptors, move forward."],
+["t8","Cell fate","How does a cell's environment change gene expression?","ECM binds integrin → focal adhesion → cytoskeleton change → nucleus. Or growth factor binds receptor → intracellular cascade → nucleus."],
+["t8","Assays","Direct contact cytotoxicity assay?","Material placed on a confluent cell layer for 24 h. Look for swelling, lysis, cell loss; compare with negative and positive controls."],
+["t8","Assays","Agar diffusion assay?","Cells covered with agar, material on top. Viability read at 1–3 days; more zones affected or further effects means more cytotoxic."],
+["t8","Assays","Elution assay: what does it test?","Leachable molecules. Material soaked in media 24 h, that media is applied to pre-plated cells, viability checked at 1–3 days."],
+["t8","Assays","MTT assay mechanism?","Mitochondrial reductase converts yellow MTT to purple formazan. Colour reports metabolic activity (viability)."],
+["t8","Assays","Cell viability % formula?","(treated cell number or absorbance ÷ control) × 100."],
+["t8","Assays","Boyden chamber logic?","Cells in serum-free media in upper chamber, test substance or FBS below. Migratory cells cross the membrane and cling to the underside; detach and count."],
+["t8","Assays","PCR cycle: steps, temps, times?","Denaturation 94 °C, 1 min → annealing 54 °C, 45 s (primers) → extension 72 °C, 2 min (Taq, dNTPs). 30–40 cycles."],
+["t8","Assays","PCR vs RT-PCR?","PCR amplifies DNA. RT-PCR first reverse-transcribes mRNA to cDNA, then amplifies; shows gene expression."],
+["t8","Assays","Southern vs Northern blot?","Southern detects DNA, Northern detects mRNA. Both: gel → transfer to membrane → labelled probe hybridises. No SDS needed since nucleic acids are already negative."],
+["t8","Assays","Direct vs indirect immunostaining?","Direct: tagged primary antibody. Indirect: tagged secondary antibody binds the primary (signal amplification)."],
+["t8","Assays","ELISA vs immunostaining: similarity and difference?","Both use antibody–antigen binding with labelled detection. ELISA is on a solution sample and quantitative; immunostaining is in cells or tissue sections, read by microscopy, gives localisation."],
+["t8","Assays","A material passes direct contact but fails elution. Why?","Leachables (e.g. residual monomer) are diluted at the interface but concentrated in the extract, so only elution reveals them."]
+];
+const KEY='bg2131-flash-v1';
+let st={r:{}};  // r[id] = 1 got, -1 missed
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.r)st=s}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+C.forEach((c,i)=>c.id=i);
+let filter='all',order=[],idx=0;
+const $=id=>document.getElementById(id);
+const name={t7:'Topic 7 · Proteins',t8:'Topic 8 · Cells'};
+function build(shuffle){
+  order=C.filter(c=>filter==='all'||filter===c[0]||(filter==='miss'&&st.r[c.id]===-1)).map(c=>c.id);
+  if(shuffle)for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}
+  idx=0;render();
+}
+function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function render(){
+  const stage=$('stage');
+  const scope=C.filter(c=>filter==='all'||filter===c[0]||(filter==='miss'&&st.r[c.id]===-1));
+  const g=scope.filter(c=>st.r[c.id]===1).length,m=scope.filter(c=>st.r[c.id]===-1).length;
+  $('barG').style.width=(scope.length?g/scope.length*100:0)+'%';
+  $('barM').style.width=(scope.length?m/scope.length*100:0)+'%';
+  $('score').textContent=g+' got · '+m+' missed';
+  $('count').textContent=C.length+' cards';
+  const none=!order.length||idx>=order.length;
+  $('bGot').disabled=$('bMiss').disabled=none;
+  if(!order.length){
+    $('pos').textContent='';
+    stage.innerHTML='<div class="done"><h2>Nothing here yet</h2><div class="sub">'+(filter==='miss'?'No missed cards. Nice.':'No cards.')+'</div></div>';return}
+  if(idx>=order.length){
+    $('pos').textContent=order.length+' / '+order.length;
+    const missed=order.filter(i=>st.r[i]===-1).length;
+    stage.innerHTML='<div class="done"><h2>Round complete</h2><div class="sub">'+(order.length-missed)+' got · '+missed+' missed</div>'+
+      (missed?'<button class="btn" id="rm">Review missed</button>':'')+'<button class="btn" id="again">Go again</button></div>';
+    const rm=$('rm');if(rm)rm.onclick=()=>{setFilter('miss')};
+    $('again').onclick=()=>build(true);return}
+  const c=C[order[idx]];
+  $('pos').textContent=(idx+1)+' / '+order.length;
+  stage.innerHTML='<button class="card" id="card" aria-label="Flip card">'+
+    '<div class="face"><span class="tag '+c[0]+'">'+name[c[0]]+' · '+c[1]+'</span><div class="q">'+esc(c[2])+'</div><div class="hint">Tap to flip</div></div>'+
+    '<div class="face back"><span class="tag '+c[0]+'">'+c[1]+'</span><div class="a">'+esc(c[3])+'</div><div class="hint">Tap to flip back</div></div></button>';
+  $('card').onclick=()=>$('card').classList.toggle('flip');
+}
+function mark(v){
+  if(idx>=order.length)return;
+  st.r[order[idx]]=v;save();idx++;render();
+}
+function setFilter(f){
+  filter=f;
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f?'true':'false'));
+  build(false);
+}
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));
+$('bGot').onclick=()=>mark(1);$('bMiss').onclick=()=>mark(-1);
+$('prev').onclick=()=>{if(idx>0){idx--;render()}};
+$('shuf').onclick=()=>build(true);
+$('reset').onclick=()=>{if($('reset').dataset.arm){st={r:{}};save();$('reset').textContent='Reset progress';delete $('reset').dataset.arm;build(false)}else{$('reset').dataset.arm=1;$('reset').textContent='Tap again to confirm';setTimeout(()=>{delete $('reset').dataset.arm;$('reset').textContent='Reset progress'},3000)}};
+document.addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='Enter'){const c=$('card');if(c&&document.activeElement===document.body){e.preventDefault();c.classList.toggle('flip')}}
+  if(e.key==='ArrowRight')mark(1);if(e.key==='ArrowLeft')mark(-1);
+});
+build(true);
+</script>
